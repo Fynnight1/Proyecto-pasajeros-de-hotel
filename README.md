@@ -1,0 +1,1 @@
+Aplicación dedicada al registro de pasajeros de un hotel
