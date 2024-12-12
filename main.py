@@ -1,18 +1,18 @@
 # main.py
 
-import flet as ft
-from vista.login_view import login_view
-from modelo.database import Database
+import flet as ft # type: ignore
+from views.login_view import login_view
+from models.database import Database
 
 def main(page: ft.Page):
     page.title = "Sistema de Reserva de Hoteles"
     page.window.height = 700
-    page.window.width = 1000
+    page.window.width = 1200
 
     # Inicializar la conexión a la base de datos
     Database.initialize(
         user="postgres",           # Reemplaza con tu usuario de PostgreSQL
-        password="Admin1234",      # Reemplaza con tu contraseña de PostgreSQL
+        password="Fynnight",      # Reemplaza con tu contraseña de PostgreSQL
         host="localhost",
         port="5432",
         database="hotel_reservation_db"

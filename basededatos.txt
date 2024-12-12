@@ -1,0 +1,167 @@
+-- =============================================
+-- 1. Crear la Base de Datos (Opcional)
+-- =============================================
+
+-- Si aún no has creado la base de datos, puedes hacerlo con el siguiente comando:
+-- Reemplaza 'hotel_reservation_db' con el nombre de base de datos que desees.
+
+-- CREATE DATABASE hotel_reservation_db;
+
+-- =============================================
+-- 2. Conectarse a la Base de Datos
+-- =============================================
+
+-- Asegúrate de conectarte a la base de datos que acabas de crear.
+-- \c hotel_reservation_db;
+
+-- =============================================
+-- 3. Crear la Tabla Unificada `user`
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS "user" (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    rut VARCHAR(20) UNIQUE NOT NULL,
+    address VARCHAR(255),
+    phone VARCHAR(20),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('administrator', 'worker', 'client')),
+    active BOOLEAN DEFAULT TRUE
+);
+
+-- =============================================
+-- 4. Crear la Tabla `hotel`
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS hotel (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    address VARCHAR(255),
+    phone VARCHAR(20)
+);
+
+-- =============================================
+-- 5. Crear la Tabla `room`
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS room (
+    id SERIAL PRIMARY KEY,
+    number INTEGER NOT NULL,
+    floor INTEGER,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('Available', 'Occupied', 'Maintenance')),
+    hotel_id INTEGER NOT NULL,
+    FOREIGN KEY (hotel_id) REFERENCES hotel(id) ON DELETE CASCADE
+);
+
+-- =============================================
+-- 6. Crear la Tabla `reservation`
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS reservation (
+    id SERIAL PRIMARY KEY,
+    client_id INTEGER NOT NULL,
+    room_id INTEGER NOT NULL,
+    worker_id INTEGER NOT NULL,
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    FOREIGN KEY (client_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE CASCADE,
+    FOREIGN KEY (worker_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    CHECK (check_out_date > check_in_date)
+);
+
+-- =============================================
+-- 7. Crear Índices para Mejorar el Rendimiento
+-- =============================================
+
+-- Índice para búsquedas rápidas por rol
+CREATE INDEX IF NOT EXISTS idx_user_role ON "user"(role);
+
+-- Índice para búsquedas rápidas de habitaciones disponibles
+CREATE INDEX IF NOT EXISTS idx_room_status ON room(status);
+
+-- Índice para búsquedas rápidas de reservas por cliente
+CREATE INDEX IF NOT EXISTS idx_reservation_client_id ON reservation(client_id);
+
+-- Índice para búsquedas rápidas de reservas por trabajador
+CREATE INDEX IF NOT EXISTS idx_reservation_worker_id ON reservation(worker_id);
+
+-- =============================================
+-- 8. Insertar Datos de Muestra (Opcional)
+-- =============================================
+
+-- A continuación, se muestran algunos ejemplos de inserciones de datos.
+-- Puedes omitir esta sección si prefieres agregar datos más tarde.
+
+-- Insertar un Administrador
+INSERT INTO "user" (name, rut, address, phone, username, password, role)
+VALUES (
+    'Principal Administrator',
+    '12345678-9',
+    '123 Fake Street',
+    '123456789',
+    'admin',
+    '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', -- Reemplaza con una contraseña encriptada real
+    'administrator'
+);
+
+INSERT INTO "user" (name, rut, address, phone, username, password, role)
+VALUES
+    ('Reserva Online', '99999999-1', 'Dirección Online', '000000000', 'reserva_online', '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', 'worker'),
+    ('Worker Two', '98765432-2', '742 Evergreen Terrace 2', '987654322', 'worker2', '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', 'worker'),
+    ('Worker Three', '98765432-3', '742 Evergreen Terrace 3', '987654323', 'worker3', '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', 'worker'),
+    ('Worker Four', '98765432-4', '742 Evergreen Terrace 4', '987654324', 'worker4', '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', 'worker'),
+    ('Worker Five', '98765432-5', '742 Evergreen Terrace 5', '987654325', 'worker5', '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', 'worker');
+
+-- Insertar un Cliente
+INSERT INTO "user" (name, rut, address, phone, username, password, role)
+VALUES (
+    'Sample Client',
+    '11223344-5',
+    '456 Broken Dreams Boulevard',
+    '1122334455',
+    'client1',
+    '$12$XZqZmRW5RgJp.yz/jKDQY.tTHSQ83QH.h8ml7wwNNJqeCwxLXq3hu', -- Reemplaza con una contraseña encriptada real
+    'client'
+);
+
+-- Insertar un Hotel
+INSERT INTO hotel (name, address, phone)
+VALUES (
+    'Central Hotel',
+    '789 Central Avenue',
+    '555666777'
+);
+
+-- Insertar Habitaciones
+INSERT INTO room (number, floor, status, hotel_id)
+VALUES
+    (101, 1, 'Available', 1),
+    (102, 1, 'Occupied', 1),
+    (201, 2, 'Available', 1),
+    (202, 2, 'Maintenance', 1);
+
+-- Insertar Reservas
+INSERT INTO reservation (client_id, room_id, worker_id, check_in_date, check_out_date)
+VALUES
+    (3, 1, 2, '2024-12-10', '2024-12-15'),
+    (3, 3, 2, '2024-12-20', '2024-12-25');
+
+-- =============================================
+-- 9. Confirmar la Creación de Tablas
+-- =============================================
+
+-- Puedes verificar que las tablas se hayan creado correctamente con las siguientes consultas:
+
+-- Verificar la tabla `user`
+SELECT * FROM "user";
+
+-- Verificar la tabla `hotel`
+SELECT * FROM hotel;
+
+-- Verificar la tabla `room`
+SELECT * FROM room;
+
+-- Verificar la tabla `reservation`
+SELECT * FROM reservation;
